@@ -260,10 +260,9 @@ void ApproximationViewer::fit_curve()
 
 void ApproximationViewer::add_noise(Scalar _amplitude)
 {
-/**
- * \todo Add noise to the `y`-component of each constraint.
- * The offset should be between `-_amplitude` and `_amplitude`.
- */
+    for (int i = 0; i < constraints_y_.size(); i++) {
+        constraints_y_[i] += 2 * (rand() % 100) / 100.0 * _amplitude - _amplitude;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -271,7 +270,7 @@ void ApproximationViewer::add_noise(Scalar _amplitude)
 void ApproximationViewer::approximate()
 {
 /**
- * \todo Determine the polynomial coefficients as the 
+ * \todo Determine the polynomial coefficients as the
  * least squares solution of the overdetermined problem `A * x = b`.
  * - Setup the overdetermined system `A * x = b`. Make sure to set `m` and `n` correctly.
  *   The polynom's intended degree is stored in `poly_degree_`.
@@ -283,6 +282,36 @@ void ApproximationViewer::approximate()
  *
  * To find out how to use Eigen's Cholesky and QR solvers, simply run a Google search for the terms.
  */
+    assert(constraints_x_.size() == constraints_y_.size());
+
+    if (constraints_x_.size() < 1) return;
+
+    unsigned int n = poly_degree_ + 1, m = constraints_y_.size();
+    MatrixXX A(m, n);
+    VectorX b(m), x(n), b_n(n);
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            A(i, j) = pow(constraints_x_[i], (double) j);
+        }
+        b(i) = constraints_y_[i];
+    }
+
+    if (approximation_solver_ == CHOLESKY_EIGEN) {
+        x = (A.transpose() * A).llt().solve(A.transpose() * b);
+    }
+    else if (approximation_solver_ == QR_EIGEN)
+    {
+        /* code */
+    }
+    else
+    {
+        // use own
+    }
+
+    // // copy solution to coefficients vector
+    coefficients_.resize(n);
+    for (int i = 0; i < n; ++i) coefficients_[i] = x(i);
 }
 
 //=============================================================================
