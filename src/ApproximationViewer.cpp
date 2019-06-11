@@ -302,11 +302,13 @@ void ApproximationViewer::approximate()
     }
     else if (approximation_solver_ == QR_EIGEN)
     {
-        /* code */
+        x = A.colPivHouseholderQr().solve(b);
     }
     else
     {
-        // use own
+        CholeskySolver solver = CholeskySolver();
+        solver.factorize(A.transpose() * A);
+        solver.solve(A.transpose() * b, x);
     }
 
     // // copy solution to coefficients vector

@@ -30,6 +30,21 @@ bool CholeskySolver::factorize(const MatrixXX& A)
  * The matrices can be accessed by `A(i, j)` and `L(i, j)`.
  * The function should return `true` on success and `false` on failure.
  */
+    L = A.triangularView<Eigen::UpLoType::Lower>();
+
+    for (k = 0; k < m; k++) {
+        float L_kk = L(k, k);
+        float one_div_by_sqrt_L_kk = 1.0 / sqrt(L_kk);
+        for (j = k + 1; j < m; j++) {
+            float L_jk = L(j, k);
+            for (i = j; i < m; i++) {
+                L(i, j) = L(i, j) - L(i, k) * L_jk / L_kk;
+            }
+        }
+        for (i = k; i < m; i++) {
+            L(i, k) = L(i, k) * one_div_by_sqrt_L_kk;
+        }
+    }
 
     // check error of factorization
     std::cout << "  error(A=L*L^T) : " << (A-L*L.transpose()).norm()
